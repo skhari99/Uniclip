@@ -25,7 +25,7 @@ export default function Room({sessionCode,setActive,handleDelete,handleSync,clip
 
                       </span>{/*add gap*/}
                         <div className='flex flex-row gap-10'>
-                          <span>User: {clip.device}</span>
+                          <span>User: {clip.user_name}</span>
                           <span>Time: {formatTime(clip.time)}</span>
                         </div>
 
