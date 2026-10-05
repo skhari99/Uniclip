@@ -19,13 +19,13 @@ function App() {
 
 
   const handleName = async (code) => {
-    if (tempName.trim() != "") {
-      setUserName(tempName);
-      const { error } = await supabase.from('users').insert([{ room_code: code, user_name: tempName }]);
+      const finalName=(tempName.trim() === "")? "Guest": tempName;
+      setUserName(finalName);
+      const { error } = await supabase.from('users').insert([{ room_code: code, user_name: finalName }]);
       if (error) {
         throw new Error("Error giving username.Try again");
       }
-    }
+    
   }
   const handleSync = async () => {
     try {
@@ -131,7 +131,7 @@ function App() {
     //load the existing syncs 
     const loadExisting = async () => {
       const { data, error } = await supabase.from('clips').select('*').eq('room_code', sessionCode).order('time', { ascending: false });
-      const {data: userData,error: userError}=await supabase.from('users').select('user_name').eq('room_code',sessionCode);
+      const {data: userData,error: userError}=await supabase.from('users').select('*').eq('room_code',sessionCode);
       if (error) {
         console.error("Error loading", error);
       }
@@ -176,8 +176,10 @@ function App() {
           event: 'INSERT', schema:'public' , table: 'users', filter: `room_code=eq.${sessionCode}`,
         },
         (payload)=>{
-          console.log(payload.new);
-          setDevices((prevDevices)=>[payload.new,...prevDevices]);
+            setDevices((prevDevices) => {
+            const filtered = prevDevices.filter(device => device.id !== payload.new.id);
+            return [payload.new, ...filtered];
+            });
         }
       )
       .subscribe((status, error) => {
@@ -202,10 +204,10 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col items-center justify-center p-4 ">
       <h1 className="text-3xl font-extrabold text-center text-white mb-8 tracking-wide">UniClip</h1>
-      <div className="flex flex-col gap-10 bg-slate-900 border border-slate-700 rounded-xl p-6 text-slate-500 text-center text-sm">
+      <div className="flex flex-col gap-10 bg-slate-900 border border-slate-700 rounded-xl p-6 text-white-500 text-center text-sm">
         {!active ?
           (<Name tempName={tempName} setTempName={setTempName} />) :
-          (<div>{userName}</div>)
+          (<div>User: {userName}</div>)
         }
         <div className="dashboard">
           {(!active) ?
