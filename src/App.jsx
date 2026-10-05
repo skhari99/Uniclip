@@ -25,7 +25,6 @@ function App() {
       if (error) {
         throw new Error("Error giving username.Try again");
       }
-    
   }
   const handleSync = async () => {
     try {
