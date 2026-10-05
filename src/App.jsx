@@ -114,12 +114,12 @@ function App() {
 
   }
   const handleDelete = async (id) => {
-    const { error } = await supabase.from('clips').delete().eq('room-code',sessionCode).eq('id', id);
+    const { error } = await supabase.from('clips').delete().eq('room_code', sessionCode).eq('id', id);
     if (error) {
       console.error("Error deleting the item", error);
       alert("Failed to delete");
     }
-    else{
+    else {
       console.log("deleted");
     }
   }
@@ -129,8 +129,9 @@ function App() {
     }
 
     //load the existing syncs 
-    const loadExistingSyncs = async () => {
+    const loadExisting = async () => {
       const { data, error } = await supabase.from('clips').select('*').eq('room_code', sessionCode).order('time', { ascending: false });
+      const {data: userData,error: userError}=await supabase.from('users').select('user_name').eq('room_code',sessionCode);
       if (error) {
         console.error("Error loading", error);
       }
@@ -138,8 +139,15 @@ function App() {
         console.log(clips);
         setClips(data);
       }
+      if(userError){
+        console.error(userError);
+      }
+      else if(!userError && userData){
+        console.log(devices);
+        setDevices(userData);
+      }
     };
-    loadExistingSyncs();
+    loadExisting();
     //set up real time channel
     const channel = supabase.channel(`room-${sessionCode}`)
       .on(
@@ -160,6 +168,16 @@ function App() {
         (payload) => {
           console.log("Delete on the way")//remove the console.log
           setClips((prevClips) => prevClips.filter((clip) => clip.id !== payload.old.id))
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT', schema:'public' , table: 'users', filter: `room_code=eq.${sessionCode}`,
+        },
+        (payload)=>{
+          console.log(payload.new);
+          setDevices((prevDevices)=>[payload.new,...prevDevices]);
         }
       )
       .subscribe((status, error) => {
@@ -196,7 +214,7 @@ function App() {
             ) : (
               <div className="flex flex-col gap-5 w-full">
                 <Room sessionCode={sessionCode} setActive={setActive} handleDelete={handleDelete} handleSync={handleSync} clips={clips} />
-                <Devices />
+                <Devices devices={devices}/>
               </div>
             )
           }
