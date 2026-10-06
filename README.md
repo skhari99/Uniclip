@@ -1,4 +1,4 @@
-# UniClip 📋✨
+# UniClip 
 
 A modern, real-time web application that allows users to instantly share and sync their clipboard text across multiple devices using unique room codes.
 
